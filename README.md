@@ -39,7 +39,7 @@ git clone https://github.com/mfgbhatti/hastre ~/.config/zsh
 plugins=(copyfile copypath copybuffer common-aliases fzf starship uv git gh zsh-autosuggestions zsh-syntax-highlighting)
 ```
 
-Extra plugins available: `systemd`, `archlinux`, `dnf`, `you-should-use`.
+Extra plugins available: `systemd`, `archlinux`, `dnf`, `you-should-use` and `fzf-tab`.
 
 ## Requirements
 

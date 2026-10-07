@@ -30,7 +30,7 @@ HIST_STAMPS="yyyy-mm-dd"
 # Plugins (each lives in $ZSH/plugins/<name>/)
 # Available:
 #   archlinux  common-aliases  copybuffer  copyfile  copypath  dnf  fzf  gh
-#   git  starship  systemd  uv  you-should-use
+#   git  starship  systemd  uv  you-should-use fzf-tab
 #   zsh-autosuggestions  zsh-syntax-highlighting
 #
 # Load zsh-syntax-highlighting last.
@@ -48,7 +48,8 @@ plugins=(
   # archlinux
   # dnf
   # systemd
-  # you-should-use
+  you-should-use
+  fzf-tab
   zsh-autosuggestions
   zsh-syntax-highlighting
 )
