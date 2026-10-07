@@ -60,7 +60,7 @@ dependencies:
   plugins/fzf-tab:
     repo: Aloxaf/fzf-tab
     branch: master
-    version: 24105b15714bfec37989ed5c5b6e60f572253019
+    version: d7e0234614dbe5369fdd760907d12c0e05a4dccc
     precopy: |
       set -e
       test -e README.md && mv -f README.md MANUAL.md
