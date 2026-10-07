@@ -1,0 +1,7 @@
+.shuck.toml
+aliasrc.backup
+options.backup
+zprofile.backup
+zshrc-backup
+.zshrc
+.zshrc.bak.*
