@@ -11,6 +11,7 @@ Bundled third-party plugins:
 - [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
 - [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
 - [zsh-you-should-use](https://github.com/MichaelAquilina/zsh-you-should-use)
+- [fzf-tab](https://github.com/aloxaf/fzf-tab)
 
 ## Features
 
