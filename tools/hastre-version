@@ -1,0 +1,260 @@
+#!/usr/bin/env zsh
+# hastre-version: show, bump or set the Hastre version.
+#
+# The version lives in the VERSION file (X.Y.Z).
+# A release is one commit that changes VERSION plus an annotated tag vX.Y.Z.
+# Nothing is ever pushed.
+#
+# Usage:
+#   hastre-version [show]
+#   hastre-version bump <patch|minor|major> [-n|--dry-run] [-y|--yes]
+#   hastre-version set <X.Y.Z>              [-n|--dry-run] [-y|--yes]
+#
+# Checks before writing anything:
+#   - git repository
+#   - on a branch (not detached)
+#   - clean working tree (submodule contents are ignored)
+#   - target tag does not already exist
+
+emulate -L zsh
+setopt no_unset pipe_fail
+
+zmodload zsh/zutil
+
+# Configuration
+
+readonly ROOT=${0:A:h:h}
+readonly VERSION_FILE=$ROOT/VERSION
+readonly SEMVER='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+
+# State
+
+typeset -a dry yes help
+typeset current branch
+
+# Small helpers
+
+say() {
+  print -r -- "$*"
+}
+
+warn() {
+  print -u2 -r -- "hastre-version: $*"
+}
+
+die() {
+  warn "$*"
+  exit 1
+}
+
+usage() {
+  print -u2 -r -- \
+    'usage: hastre-version [show]
+       hastre-version bump <patch|minor|major> [-n|--dry-run] [-y|--yes]
+       hastre-version set <X.Y.Z>              [-n|--dry-run] [-y|--yes]'
+
+  exit ${1:-2}
+}
+
+confirm() {
+  [[ -n $yes ]] && return 0
+
+  [[ -t 0 ]] ||
+    die "not a terminal; pass --yes to confirm"
+
+  read -q "REPLY?$1 [y/N] " || {
+    print
+    return 1
+  }
+
+  print
+}
+
+# Version
+
+read_version() {
+  [[ -r $VERSION_FILE ]] ||
+    die "VERSION not found in $ROOT"
+
+  current=$(<$VERSION_FILE)
+  current=${current//[[:space:]]/}
+
+  [[ $current =~ $SEMVER ]] ||
+    die "VERSION is not X.Y.Z: '$current'"
+}
+
+next_version() {
+  local kind=${1-}
+  local -i major minor patch
+
+  [[ $current =~ $SEMVER ]] ||
+    die "current VERSION is not valid: '$current'"
+
+  major=$match[1]
+  minor=$match[2]
+  patch=$match[3]
+
+  case $kind in
+  major)
+    print -r -- "$((major + 1)).0.0"
+    ;;
+  minor)
+    print -r -- "$major.$((minor + 1)).0"
+    ;;
+  patch)
+    print -r -- "$major.$minor.$((patch + 1))"
+    ;;
+  *)
+    usage
+    ;;
+  esac
+}
+
+validate_version() {
+  local version=$1
+
+  [[ $version =~ $SEMVER ]] ||
+    die "not a valid X.Y.Z version: '$version'"
+}
+
+# Git
+
+git_check() {
+  git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1 ||
+    die "$ROOT is not a git repository"
+}
+
+git_check_branch() {
+  branch=$(
+    git -C "$ROOT" symbolic-ref --quiet --short HEAD
+  ) || die "detached HEAD; check out a branch first"
+}
+
+git_check_clean() {
+  local dirty
+
+  dirty=$(
+    git -C "$ROOT" status \
+      --porcelain \
+      --ignore-submodules=dirty
+  ) || die "git status failed"
+
+  [[ -z $dirty ]] ||
+    die "working tree is not clean; commit or stash first"
+}
+
+git_check_tag() {
+  local version=$1
+
+  if git -C "$ROOT" rev-parse \
+    --quiet \
+    --verify \
+    "refs/tags/v$version" >/dev/null; then
+    die "tag v$version already exists"
+  fi
+}
+
+preflight() {
+  local version=$1
+
+  validate_version "$version"
+  git_check
+  git_check_branch
+  git_check_clean
+
+  [[ $version != $current ]] ||
+    die "already at $current"
+
+  git_check_tag "$version"
+}
+
+# Release
+
+release() {
+  local version=$1
+  local message="bumps: v$version"
+  local tag_message="Hastre v$version"
+  local backup
+
+  preflight "$version"
+
+  say "Version : $current -> $version"
+  say "Branch  : $branch"
+  say "Commit  : $message"
+  say "Tag     : v$version (annotated)"
+
+  if [[ -n $dry ]]; then
+    say "(dry run, nothing changed)"
+    return 0
+  fi
+
+  confirm "Proceed?" || {
+    say "Aborted."
+    return 1
+  }
+
+  print -r -- "$version" >|"$VERSION_FILE"
+
+  if ! {
+    git -C "$ROOT" add -- VERSION &&
+      git -C "$ROOT" commit -q -m "$message"
+  }; then
+    git -C "$ROOT" reset -q HEAD -- VERSION 2>/dev/null
+    git -C "$ROOT" checkout -q -- VERSION
+
+    die "commit failed, VERSION restored"
+  fi
+
+  if ! git -C "$ROOT" tag -a "v$version" -m "$tag_message"; then
+    warn "commit created but tagging failed"
+    say "Create the tag manually with:"
+    say "  git -C \"$ROOT\" tag -a \"v$version\" -m \"$tag_message\""
+    return 1
+  fi
+
+  say "Released v$version."
+  say "Push with: git push --follow-tags"
+}
+
+# Main
+
+zparseopts -D -E -- \
+  n=dry \
+  -dry-run=dry \
+  y=yes \
+  -yes=yes \
+  h=help \
+  -help=help ||
+  usage
+
+[[ -n $help ]] && usage 0
+
+typeset cmd=${1:-show}
+
+(($#)) && shift
+
+read_version
+
+case $cmd in
+show)
+  print -r -- "$current"
+  ;;
+
+bump)
+  [[ $# -eq 1 ]] ||
+    usage
+
+  release "$(next_version "$1")"
+  ;;
+
+set)
+  [[ $# -eq 1 ]] ||
+    usage
+
+  release "$1"
+  ;;
+
+*)
+  usage
+  ;;
+esac
