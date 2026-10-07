@@ -1,0 +1,40 @@
+name: Update dependencies
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 6 * * 0" # Sundays, 06:00 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check for updates
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push update branches
+      pull-requests: write # open PRs
+      issues: write # open an issue when an automatic update fails
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: .github/workflows/dependencies/requirements.txt
+
+      - name: Process dependencies
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_APP_NAME: github-actions[bot]
+          GIT_APP_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          TMP_DIR: ${{ runner.temp }}
+        run: |
+          pip install -r .github/workflows/dependencies/requirements.txt
+          python3 .github/workflows/dependencies/updater.py
