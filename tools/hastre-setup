@@ -1,0 +1,550 @@
+#!/usr/bin/env zsh
+# hastre-setup: setup helper for Hastre. Safe to run any number of times.
+# Nothing here runs at shell startup; run it by hand after cloning.
+#
+# Usage:
+#   hastre-setup
+#   hastre-setup zshenv [--force]
+#   hastre-setup zshrc
+#   hastre-setup deps   [--install]
+#
+# zshenv
+#   Make sure ~/.zshenv points zsh at this repo (ZDOTDIR) and defines the
+#   XDG_* directories.
+#
+#   Missing file:
+#     Install templates/zshenv.
+#
+#   Existing file that already works:
+#     Leave it alone.
+#
+#   Existing file that does not:
+#     Report what is wrong and change nothing.
+#
+#   With --force:
+#     Back up ~/.zshenv to ~/.zshenv.bak.<timestamp> and install the template.
+#
+# zshrc
+#   Make sure $ZDOTDIR/.zshrc (the repo itself when ZDOTDIR is unset) is the
+#   Hastre template. .zshrc is personal and ignored by git.
+#
+#   Missing file:
+#     Install templates/zshrc.
+#
+#   Existing file identical to the template:
+#     Leave it alone.
+#
+#   Existing file that differs:
+#     Back it up to .zshrc.bak.<timestamp> and install the template
+#     (asks first unless --yes is given).
+#
+# deps
+#   Report which external programs Hastre uses are present.
+#
+#   --install:
+#     Offer to install missing programs with the system package manager
+#     (pkg, apt, pacman, dnf).
+#
+#   When all required programs are present:
+#     Touch $ZSH_CACHE_DIR/.deps-ok.
+#
+# Options:
+#   -n, --dry-run    Show what would happen; change nothing.
+#   -y, --yes        Do not ask for confirmation.
+#   -h, --help       Show this help.
+#
+# Exit status:
+#   0  all good
+#   1  something needs attention
+#   2  usage error
+
+emulate -L zsh
+setopt no_unset pipe_fail
+
+zmodload zsh/zutil
+zmodload zsh/datetime
+zmodload -F zsh/files b:zf_mkdir
+
+# Paths / configuration
+
+readonly ROOT=${0:A:h:h}
+readonly TARGET=$HOME/.zshenv
+readonly TEMPLATE=$ROOT/templates/zshenv
+readonly ZSHRC_TEMPLATE=$ROOT/templates/zshrc
+
+readonly XDG_VARS=(
+    XDG_CONFIG_HOME
+    XDG_CACHE_HOME
+    XDG_DATA_HOME
+    XDG_STATE_HOME
+)
+
+# Dependencies
+# program(s)       level      termux          apt               pacman
+#                                                                dnf
+#
+# "a|b" means either executable name counts.
+
+readonly deps=(
+    'git          required  git              git              git              git'
+    'fzf          required  fzf              fzf              fzf              fzf'
+    'starship     required  starship         starship         starship         starship'
+    'nvim         optional  neovim           neovim           neovim           neovim'
+    'bat|batcat   optional  bat              bat              bat              bat'
+    'delta        optional  git-delta        git-delta        git-delta        git-delta'
+    'nc           optional  netcat-openbsd   netcat-openbsd   openbsd-netcat   nmap-ncat'
+    'curl         optional  curl             curl             curl             curl'
+)
+
+# State
+
+typeset -a dry yes help force install
+typeset -a problems missing_pkgs
+typeset -i required_missing=0
+typeset pm
+
+# Small helpers
+
+say() {
+    print -r -- "$*"
+}
+
+warn() {
+    print -u2 -r -- "hastre-setup: $*"
+}
+
+die() {
+    warn "$*"
+    exit 1
+}
+
+usage() {
+    print -u2 -r -- \
+        'usage: hastre-setup [zshenv [--force] | zshrc | deps [--install]] [-n|--dry-run] [-y|--yes]'
+    exit ${1:-2}
+}
+
+confirm() {
+    [[ -n $yes ]] && return 0
+
+    [[ -t 0 ]] || die "not a terminal; pass --yes to confirm"
+
+    read -q "REPLY?$1 [y/N] " || {
+        print
+        return 1
+    }
+
+    print
+}
+
+# Cache
+# Use the XDG cache location unless the environment already provides
+# ZSH_CACHE_DIR. This remains a shell variable; it does not need to be exported.
+ensure_zsh_cache() {
+   typeset -g ZSH_CACHE_DIR="${ZSH_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/zsh}"
+
+    [[ -d $ZSH_CACHE_DIR ]] && return 0
+
+    zf_mkdir -p -- "$ZSH_CACHE_DIR" ||
+        die "failed to create ZSH_CACHE_DIR at $ZSH_CACHE_DIR"
+}
+
+# zshenv
+
+# Print NAME=value lines describing what a clean zsh sees after ~/.zshenv.
+effective_env() {
+    env -i HOME="$HOME" PATH="$PATH" zsh -c '
+        for v in \
+            ZDOTDIR \
+            ZSH_CACHE_DIR \
+            XDG_CONFIG_HOME \
+            XDG_CACHE_HOME \
+            XDG_DATA_HOME \
+            XDG_STATE_HOME
+        do
+            print -r -- "$v=${(P)v:-}"
+        done
+    '
+}
+
+# Fill `problems` with everything wrong with the current ~/.zshenv.
+zshenv_problems() {
+    local -A got
+    local line v
+
+    for line in "${(@f)$(effective_env)}"; do
+        got[${line%%=*}]=${line#*=}
+    done
+
+    problems=()
+
+    if [[ -z $got[ZDOTDIR] ]]; then
+        problems+=("ZDOTDIR is not set")
+    elif [[ ${got[ZDOTDIR]:A} != ${ROOT:A} ]]; then
+        problems+=(
+            "ZDOTDIR is $got[ZDOTDIR], this repo is $ROOT"
+        )
+    fi
+
+    for v in $XDG_VARS; do
+        [[ -n $got[$v] ]] ||
+            problems+=("$v is not set")
+    done
+
+    return 0
+}
+
+# The template points ZDOTDIR at $XDG_CONFIG_HOME/zsh, so the repository
+# must actually live there.
+require_expected_location() {
+    local expected=${XDG_CONFIG_HOME:-$HOME/.config}/zsh
+
+    [[ ${expected:A} == ${ROOT:A} ]] ||
+        die \
+            "this repo is at $ROOT but templates/zshenv points ZDOTDIR to $expected; clone or move the repo there first"
+}
+
+cmd_zshenv() {
+    local problem stamp backup
+
+    [[ -r $TEMPLATE ]] ||
+        die "template not found: $TEMPLATE"
+
+    if [[ ! -e $TARGET ]]; then
+        require_expected_location
+
+        say "~/.zshenv is missing: installing templates/zshenv"
+
+        if [[ -n $dry ]]; then
+            say "(dry run, nothing changed)"
+            return 0
+        fi
+
+        cp -- "$TEMPLATE" "$TARGET" ||
+            die "could not write $TARGET"
+
+        say "installed $TARGET"
+
+        ensure_zsh_cache
+        return 0
+    fi
+
+    zshenv_problems
+
+    if ((!$#problems)); then
+        say "~/.zshenv is OK (ZDOTDIR -> $ROOT, XDG_* defined)"
+        ensure_zsh_cache
+        return 0
+    fi
+
+    say "~/.zshenv needs changes:"
+
+    for problem in $problems; do
+        say "  - $problem"
+    done
+
+    if [[ -z $force ]]; then
+        say "Add the missing lines from templates/zshenv, or run:"
+        say "  hastre-setup zshenv --force"
+        say "(--force keeps a backup of your current file)"
+        return 1
+    fi
+
+    require_expected_location
+
+    if [[ -n $dry ]]; then
+        say "(dry run) would back up ~/.zshenv and replace it with the template"
+        return 1
+    fi
+
+    confirm "Replace ~/.zshenv with templates/zshenv (a backup is kept)?" || {
+        say "Aborted."
+        return 1
+    }
+
+    strftime -s stamp %Y%m%d_%H%M%S "$EPOCHSECONDS"
+    backup=$TARGET.bak.$stamp
+
+    cp -p -- "$TARGET" "$backup" ||
+        die "could not create backup $backup"
+
+    cp -- "$TEMPLATE" "$TARGET" ||
+        die "could not write $TARGET (backup is at $backup)"
+
+    say "replaced $TARGET (backup: $backup)"
+
+    ensure_zsh_cache
+}
+
+# zshrc
+
+# Install templates/zshrc as $ZDOTDIR/.zshrc, backing up any different file.
+cmd_zshrc() {
+    local dir=${ZDOTDIR:-$ROOT}
+    local target=$dir/.zshrc
+    local stamp backup
+
+    [[ -r $ZSHRC_TEMPLATE ]] ||
+        die "template not found: $ZSHRC_TEMPLATE"
+
+    if [[ ! -e $target ]]; then
+        say "$target is missing: installing templates/zshrc"
+
+        if [[ -n $dry ]]; then
+            say "(dry run, nothing changed)"
+            return 0
+        fi
+
+        zf_mkdir -p -- "$dir" ||
+            die "could not create $dir"
+
+        cp -- "$ZSHRC_TEMPLATE" "$target" ||
+            die "could not write $target"
+
+        say "installed $target"
+        return 0
+    fi
+
+    if cmp -s -- "$ZSHRC_TEMPLATE" "$target"; then
+        say "$target is OK (matches templates/zshrc)"
+        return 0
+    fi
+
+    say "$target differs from templates/zshrc"
+
+    if [[ -n $dry ]]; then
+        say "(dry run) would back it up and replace it with the template"
+        return 0
+    fi
+
+    confirm "Back up $target and replace it with templates/zshrc?" || {
+        say "Aborted."
+        return 1
+    }
+
+    strftime -s stamp %Y%m%d_%H%M%S "$EPOCHSECONDS"
+    backup=$target.bak.$stamp
+
+    cp -p -- "$target" "$backup" ||
+        die "could not create backup $backup"
+
+    cp -- "$ZSHRC_TEMPLATE" "$target" ||
+        die "could not write $target (backup is at $backup)"
+
+    say "replaced $target (backup: $backup)"
+    say "re-apply your own changes from the backup if needed"
+}
+
+# deps
+# Set $pm to pkg, apt, pacman, dnf, or empty if none is supported.
+detect_pkg_manager() {
+    pm=
+
+    if [[ -n ${TERMUX_VERSION-} ||
+        -d /data/data/com.termux/files/usr ]]; then
+        pm=pkg
+    elif (($+commands[apt-get])); then
+        pm=apt
+    elif (($+commands[pacman])); then
+        pm=pacman
+    elif (($+commands[dnf])); then
+        pm=dnf
+    fi
+}
+
+# Print one status line per program.
+# Fill $missing_pkgs and $required_missing.
+check_deps() {
+    local row name level alt found
+    local -a fields
+    local -i package_column
+
+    missing_pkgs=()
+    required_missing=0
+
+    detect_pkg_manager
+
+    case $pm in
+    pkg)
+        package_column=3
+        ;;
+    apt)
+        package_column=4
+        ;;
+    pacman)
+        package_column=5
+        ;;
+    dnf)
+        package_column=6
+        ;;
+    *)
+        package_column=0
+        ;;
+    esac
+
+    for row in $deps; do
+        fields=(${=row})
+
+        name=${fields[1]}
+        level=${fields[2]}
+        found=
+
+        for alt in ${(s:|:)name}; do
+            if (($+commands[$alt])); then
+                found=$alt
+                break
+            fi
+        done
+
+        if [[ -n $found ]]; then
+            printf '  %-8s %-9s %s\n' ok "$level" "$found"
+            continue
+        fi
+
+        printf \
+            '  %-8s %-9s %s\n' \
+            missing \
+            "$level" \
+            "${name//|/ or }"
+
+        [[ $level == required ]] && ((required_missing++))
+
+        if ((package_column)); then
+            missing_pkgs+=("${fields[package_column]}")
+        fi
+    done
+
+    # Avoid attempting to install the same package more than once.
+    missing_pkgs=("${(@u)missing_pkgs}")
+}
+
+install_missing() {
+    local package
+    local -a runas cmd failed
+
+    case $pm in
+    pkg)
+        cmd=(pkg install -y)
+        ;;
+    apt)
+        cmd=(apt-get install -y)
+        ;;
+    pacman)
+        cmd=(pacman -S --needed --noconfirm)
+        ;;
+    dnf)
+        cmd=(dnf install -y)
+        ;;
+    *)
+        die \
+            "no supported package manager (pkg, apt, pacman, dnf); install manually"
+        ;;
+    esac
+
+    if [[ $pm != pkg ]] && ((EUID != 0)); then
+        (($+commands[sudo])) ||
+            die "need ROOT or sudo to install packages"
+
+        runas=(sudo)
+    fi
+
+    say "Will run, one package at a time:"
+    say "  $runas $cmd <package>"
+    say "Packages: $missing_pkgs"
+
+    if [[ -n $dry ]]; then
+        say "(dry run, nothing installed)"
+        return 0
+    fi
+
+    confirm "Install?" || {
+        say "Aborted."
+        return 1
+    }
+
+    for package in $missing_pkgs; do
+        "$runas[@]" "$cmd[@]" "$package" ||
+            failed+=("$package")
+    done
+
+    rehash
+
+    if (($#failed)); then
+        warn \
+            "could not install: $failed (not packaged for this system? install them manually)"
+    fi
+}
+
+cmd_deps() {
+    ensure_zsh_cache
+
+    say "Dependencies:"
+    check_deps
+
+    if (($#missing_pkgs)) && [[ -n $install ]]; then
+        install_missing
+
+        if [[ -z $dry ]]; then
+            say "Dependencies after install:"
+            check_deps
+        fi
+    elif (($#missing_pkgs)); then
+        say "Run: hastre-setup deps --install"
+    fi
+
+    if ((required_missing)); then
+        rm -f -- "$ZSH_CACHE_DIR/.deps-ok"
+        warn "$required_missing required program(s) missing"
+        return 1
+    fi
+
+    if [[ -z $dry ]]; then
+        : >|"$ZSH_CACHE_DIR/.deps-ok"
+    fi
+
+    return 0
+}
+
+# main
+
+zparseopts -D -E -- \
+    n=dry \
+    -dry-run=dry \
+    y=yes \
+    -yes=yes \
+    h=help \
+    -help=help \
+    f=force \
+    -force=force \
+    -install=install ||
+    usage
+
+[[ -n $help ]] && usage 0
+
+case ${1:-all} in
+zshenv)
+    cmd_zshenv
+    ;;
+
+zshrc)
+    cmd_zshrc
+    ;;
+
+deps)
+    cmd_deps
+    ;;
+
+all)
+    typeset -i rc=0
+
+    cmd_zshenv || rc=1
+    cmd_zshrc || rc=1
+    cmd_deps || rc=1
+
+    exit $rc
+    ;;
+
+*)
+    usage
+    ;;
+esac

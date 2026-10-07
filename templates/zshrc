@@ -1,0 +1,77 @@
+# Hastre ~/.config/zsh/.zshrc (copy of templates/zshrc, installed by
+# tools/hastre-setup). This file is personal and is ignored by git.
+#
+# Everything below is optional. Uncomment a line to change it. Settings must
+# come BEFORE the `source .../hastre.zsh` line at the bottom.
+
+# Core
+# Hastre checkout. Defaults to the directory containing hastre.zsh.
+# export ZSH="$HOME/.config/zsh"
+
+# Cache dir for the completion dump and generated completions.
+# export ZSH_CACHE_DIR="$XDG_CACHE_HOME/zsh"
+
+# Completion dump file. Defaults to $ZSH_CACHE_DIR/zcompdump-$ZSH_VERSION.
+# export ZSH_COMPDUMP="$ZSH_CACHE_DIR/zcompdump-$ZSH_VERSION"
+
+# History (see config/history.zsh)
+# Timestamp format shown by `history`:
+#   "mm/dd/yyyy" | "dd.mm.yyyy" | "yyyy-mm-dd" | any strftime format | "" (none)
+HIST_STAMPS="yyyy-mm-dd"
+
+# History file. Defaults to $XDG_STATE_HOME/zsh/history.
+# HISTFILE="$XDG_STATE_HOME/zsh/history"
+
+# Hastre raises these to at least 50000 (HISTSIZE) and 10000 (SAVEHIST);
+# set them higher here if you want more.
+# HISTSIZE=100000
+# SAVEHIST=100000
+
+# Plugins (each lives in $ZSH/plugins/<name>/)
+# Available:
+#   archlinux  common-aliases  copybuffer  copyfile  copypath  dnf  fzf  gh
+#   git  starship  systemd  uv  you-should-use
+#   zsh-autosuggestions  zsh-syntax-highlighting
+#
+# Load zsh-syntax-highlighting last.
+plugins=(
+  copyfile
+  copypath
+  copybuffer
+  common-aliases
+  fzf
+  starship
+  uv
+  git
+  gh
+  bat
+  # archlinux
+  # dnf
+  # systemd
+  # you-should-use
+  zsh-autosuggestions
+  zsh-syntax-highlighting
+)
+
+# Plugin settings
+# bat
+# BAT_THEME=OneHalfDark
+# BAT_ALIAS_CAT=1   # alias cat to bat --plain --paging=never
+# zsh-autosuggestions
+# ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+# ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
+# ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+
+# zsh-syntax-highlighting
+# ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
+
+# you-should-use
+# YSU_MESSAGE_POSITION="after"   # before | after
+# YSU_MODE=ALL                   # BESTMATCH (default) | ALL
+# YSU_HARDCORE=1
+# YSU_IGNORED_ALIASES=(g ll)
+
+# Load Hastre
+source "${ZDOTDIR:-${XDG_CONFIG_HOME:-$HOME/.config}/zsh}/hastre.zsh"
+
+# Your own config goes below (aliases, exports, PATH, functions, ...)
