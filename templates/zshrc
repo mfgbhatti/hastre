@@ -58,6 +58,7 @@ plugins=(
 # bat
 # BAT_THEME=OneHalfDark
 # BAT_ALIAS_CAT=1   # alias cat to bat --plain --paging=never
+
 # zsh-autosuggestions
 # ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 # ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
@@ -72,6 +73,9 @@ plugins=(
 # YSU_HARDCORE=1
 # YSU_IGNORED_ALIASES=(g ll)
 
+# fzf
+# DISABLE_FZF_AUTO_COMPLETION=true
+# DISABLE_FZF_KEY_BINDINGS=true
 # Load Hastre
 source "${ZDOTDIR:-${XDG_CONFIG_HOME:-$HOME/.config}/zsh}/hastre.zsh"
 
