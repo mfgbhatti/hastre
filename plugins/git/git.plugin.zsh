@@ -2,11 +2,22 @@
 autoload -Uz is-at-least
 git_version="${${(As: :)$(git version 2>/dev/null)}[3]}"
 
-#
 # Functions Current
 # (sorted alphabetically by function name)
 # (order should follow README)
 #
+
+# Name of the current branch (or short commit hash when HEAD is detached)
+function git_current_branch() {
+  local ref
+  ref=$(command git symbolic-ref --quiet HEAD 2>/dev/null)
+  local ret=$?
+  if [[ $ret != 0 ]]; then
+    [[ $ret == 128 ]] && return # not a git repo
+    ref=$(command git rev-parse --short HEAD 2>/dev/null) || return
+  fi
+  echo ${ref#refs/heads/}
+}
 
 # Check for develop and similarly named branches
 function git_develop_branch() {
@@ -87,11 +98,6 @@ function gunwipall() {
   if [[ "$_commit" != "$(git rev-parse HEAD)" ]]; then
     git reset $_commit || return 1
   fi
-}
-
-# Warn if the current branch is a WIP
-function work_in_progress() {
-  command git -c log.showSignature=false log -n 1 2>/dev/null | grep -q -- "--wip--" && echo "WIP!!"
 }
 
 #
@@ -338,6 +344,35 @@ is-at-least 2.30 "$git_version" \
   || alias gpsupf='git push --set-upstream origin $(git_current_branch) --force-with-lease'
 alias gpv='git push --verbose'
 alias gpoat='git push origin --all && git push origin --tags'
+
+# Push like `gp`, then also push any local tags the remote doesn't have yet.
+# Usage: gpt [remote] [git push options...]   (remote defaults to the branch's
+# upstream remote, then origin). Only missing tags are pushed.
+function gpt() {
+  local remote arg branch
+  for arg in "$@"; do
+    [[ $arg == -* ]] && continue
+    remote=$arg
+    break
+  done
+  if [[ -z $remote ]]; then
+    branch=$(git_current_branch)
+    remote=$(command git config --get "branch.${branch}.remote" 2>/dev/null)
+    [[ -n $remote && $remote != . ]] || remote=origin
+  fi
+
+  command git push "$@" || return
+
+  local -a local_tags remote_tags missing
+  local_tags=(${(f)"$(command git tag)"})
+  (( ${#local_tags} )) || return 0
+  remote_tags=(${${(f)"$(command git ls-remote --tags --refs "$remote" 2>/dev/null)"}##*refs/tags/})
+  missing=(${local_tags:|remote_tags})
+  (( ${#missing} )) || return 0
+
+  echo "Pushing ${#missing} tag(s) not on $remote: ${(j:, :)missing}"
+  command git push "$remote" ${^missing/#/refs/tags/}
+}
 alias gpod='git push origin --delete'
 alias ggpush='git push origin "$(git_current_branch)"'
 
