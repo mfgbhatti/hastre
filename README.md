@@ -4,7 +4,7 @@ A lightweight, XDG-friendly Zsh configuration, heavily inspired by [Oh My Zsh](h
 
 ## Credits
 
-Hastre would not exist without **Oh My Zsh**. Much of its structure and code is adapted from it: the plugin loader, completion, history, key bindings, clipboard helpers, and several plugins (`git`, `fzf`, `uv`, `gh`, `copyfile`, `copypath`, `copybuffer`, `common-aliases`, and more). Thank you to the OMZ maintainers and contributors. Their work is MIT licensed.
+Hastre would not exist without **Oh My Zsh**. Much of its structure and code is adapted from it: the plugin loader, completion, history, key bindings, clipboard helpers, and several plugins (`git`, `fzf`, `uv`, `gh`, `npm`, `rust`, `extract`, `copyfile`, `copypath`, `copybuffer`, `common-aliases`, and more). Thank you to the OMZ maintainers and contributors. Their work is MIT licensed.
 
 Bundled third-party plugins:
 
@@ -20,6 +20,7 @@ Bundled third-party plugins:
 - Sensible history, options, and key bindings
 - Cross-platform clipboard (`clipcopy` / `clippaste`), including Termux
 - XDG base directories, with history in `$XDG_STATE_HOME`
+- Bundled plugins for git, npm, rust, archives, uploads, fail2ban and more
 - Weekly workflow that checks bundled plugins for updates
 
 ## Install
@@ -37,10 +38,38 @@ git clone https://github.com/mfgbhatti/hastre ~/.config/zsh
 `.zshrc` is personal and git-ignored. Edit it to change the `plugins` array (`templates/zshrc` lists every option):
 
 ```zsh
-plugins=(copyfile copypath copybuffer common-aliases fzf starship uv git gh zsh-autosuggestions zsh-syntax-highlighting)
+plugins=(copyfile copypath copybuffer common-aliases fzf starship uv git gh bat zsh-autosuggestions zsh-syntax-highlighting)
 ```
 
-Extra plugins available: `systemd`, `archlinux`, `dnf`, `you-should-use` and `fzf-tab`.
+## Plugins
+
+Each plugin lives in `plugins/<name>/` and has its own README. `templates/zshrc` lists them all; the ones not enabled by default are commented out.
+
+| Plugin | Description |
+| ------ | ----------- |
+| `0x0st` | Upload files to 0x0.st (`0x0_st`). Needs `curl` |
+| `archlinux` | Pacman and AUR helper aliases |
+| `bat` | Aliases and helpers for `bat` (`bman`, `bhelp`, `blog`, `bgd`) |
+| `common-aliases` | Everyday shell aliases |
+| `copybuffer` | Copy the current command line to the clipboard |
+| `copyfile` | Copy a file's contents to the clipboard |
+| `copypath` | Copy a path to the clipboard |
+| `dnf` | DNF aliases and completion |
+| `extract` | `extract` any archive, whatever the format |
+| `fail2ban` | `fail2ban-client` wrapper, shortcuts and completion |
+| `fzf` | fzf key bindings and completion |
+| `fzf-tab` | fzf-powered tab completion |
+| `gh` | GitHub CLI completion |
+| `git` | Git aliases and helpers |
+| `npm` | npm aliases, completion and an install/uninstall toggle |
+| `pastrs` | Upload text to paste.rs (`paste_rs`). Needs `curl` |
+| `rust` | Completion for `rustc`, `rustup` and `cargo` |
+| `starship` | Starship prompt |
+| `systemd` | systemctl and journalctl aliases |
+| `uv` | uv aliases and completion |
+| `you-should-use` | Reminds you of aliases you could have used |
+| `zsh-autosuggestions` | Fish-style suggestions as you type |
+| `zsh-syntax-highlighting` | Syntax highlighting on the command line (load last) |
 
 ## Requirements
 
