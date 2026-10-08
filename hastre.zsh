@@ -18,6 +18,17 @@ if [[ ! -w "$ZSH_CACHE_DIR" ]]; then
     die "failed to create ZSH_CACHE_DIR at $ZSH_CACHE_DIR"
 fi
 
+# Termux only: zsh's built-in fpath does not include site-functions, so
+# completions installed there by other packages (e.g. _cargo) are never found.
+# Add it here, before the fpath changes below and before compinit runs. Other
+# systems already have this directory in their default fpath.
+if [[ $OSTYPE == linux-android* ]]; then
+  () {
+    local sitefn=${PREFIX:-/data/data/com.termux/files/usr}/share/zsh/site-functions
+    [[ -d $sitefn ]] && ((! ${fpath[(Ie)$sitefn]})) && fpath+=("$sitefn")
+  }
+fi
+
 # Create cache and completions dir and add to $fpath
 [[ -d "$ZSH_CACHE_DIR/completions" ]] || zf_mkdir -p -- "$ZSH_CACHE_DIR/completions"
 ((${fpath[(Ie)$ZSH_CACHE_DIR/completions]})) || fpath=("$ZSH_CACHE_DIR/completions" $fpath)
