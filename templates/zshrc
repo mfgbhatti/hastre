@@ -29,9 +29,9 @@ HIST_STAMPS="yyyy-mm-dd"
 
 # Plugins (each lives in $ZSH/plugins/<name>/)
 # Available:
-#   archlinux  common-aliases  copybuffer  copyfile  copypath  dnf  fzf  gh
-#   git  starship  systemd  uv  you-should-use fzf-tab
-#   zsh-autosuggestions  zsh-syntax-highlighting
+#   0x0st  archlinux  bat  common-aliases  copybuffer  copyfile  copypath  dnf
+#   extract  fail2ban  fzf  fzf-tab  gh  git  npm  pastrs  rust  starship
+#   systemd  uv  you-should-use  zsh-autosuggestions  zsh-syntax-highlighting
 #
 # Load zsh-syntax-highlighting last.
 plugins=(
@@ -45,6 +45,12 @@ plugins=(
   git
   gh
   bat
+  # extract
+  # npm
+  # rust
+  # 0x0st
+  # pastrs
+  # fail2ban
   # archlinux
   # dnf
   # systemd
