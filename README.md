@@ -33,6 +33,25 @@ git clone https://github.com/mfgbhatti/hastre ~/.config/zsh
 
 `hastre-setup` points zsh at the repo (ZDOTDIR + XDG dirs) and installs `templates/zshrc` as `.zshrc`. An existing, different `.zshrc` is backed up first. Then restart your shell.
 
+## Commands
+
+Once Hastre is loaded you get a `hastre` command (`config/cli.zsh`, modelled on `omz` from Oh My Zsh):
+
+```zsh
+hastre help
+hastre version
+hastre update [--check]            # git checkouts only, fast-forward
+hastre reload                      # clear the completion dump, restart zsh
+hastre plugin list [--enabled]
+hastre plugin info <plugin>        # show the plugin README
+hastre plugin load <plugin> ...    # this session only
+hastre plugin enable <plugin> ...  # edit plugins=(...) in .zshrc
+hastre plugin disable <plugin> ...
+```
+
+- `update` needs `$ZSH` to be a git checkout (it has a `.git`). It stays on your current branch, only fast-forwards, and stops if tracked files have local changes. `--check` just lists new commits.
+- `plugin enable` and `plugin disable` only edit a plain `plugins=( ... )` array: one assignment, plugin names only, on one line or one per line. They uncomment or comment out an entry in place, keep the old file as `.zshrc.bak.hastre`, check the syntax before replacing it, and otherwise refuse and leave your `.zshrc` alone.
+
 ## Configure
 
 `.zshrc` is personal and git-ignored. Edit it to change the `plugins` array (`templates/zshrc` lists every option):
