@@ -23,6 +23,19 @@ Bundled third-party plugins:
 - Bundled plugins for git, npm, rust, archives, uploads, fail2ban and more
 - Weekly workflow that checks bundled plugins for updates
 
+## Layout
+
+```
+hastre.zsh    entry point: sets up fpath, completion, loads plugins and config
+config/       core settings, functions and the `hastre` command
+plugins/      bundled plugins, one directory each
+templates/    zshenv and zshrc templates installed by hastre-setup
+tools/        hastre-setup (install) and hastre-version (releases)
+VERSION       current version
+```
+
+Each directory has its own README: [config](config/README.md), [plugins](plugins/README.md), [templates](templates/README.md), [tools](tools/README.md).
+
 ## Install
 
 ```zsh
@@ -31,7 +44,7 @@ git clone https://github.com/mfgbhatti/hastre ~/.config/zsh
 ~/.config/zsh/tools/hastre-setup deps     # just check for fzf, starship, git, ...
 ```
 
-`hastre-setup` points zsh at the repo (ZDOTDIR + XDG dirs) and installs `templates/zshrc` as `.zshrc`. An existing, different `.zshrc` is backed up first. Then restart your shell.
+`hastre-setup` points zsh at the repo (ZDOTDIR + XDG dirs) and installs `templates/zshrc` as `.zshrc`. An existing, different `.zshrc` is backed up first. Then restart your shell. See [tools](tools/README.md) for all options, and for `hastre-version`, which bumps `VERSION` and tags a release.
 
 ## Commands
 
@@ -49,12 +62,13 @@ hastre plugin enable <plugin> ...  # edit plugins=(...) in .zshrc
 hastre plugin disable <plugin> ...
 ```
 
+- `hastre` lives in [`config/cli.zsh`](config/README.md); the other files in `config/` are described there too.
 - `update` needs `$ZSH` to be a git checkout (it has a `.git`). It stays on your current branch, only fast-forwards, and stops if tracked files have local changes. `--check` just lists new commits.
 - `plugin enable` and `plugin disable` only edit a plain `plugins=( ... )` array: one assignment, plugin names only, on one line or one per line. They uncomment or comment out an entry in place, keep the old file as `.zshrc.bak.hastre`, check the syntax before replacing it, and otherwise refuse and leave your `.zshrc` alone.
 
 ## Configure
 
-`.zshrc` is personal and git-ignored. Edit it to change the `plugins` array (`templates/zshrc` lists every option):
+`.zshrc` is personal and git-ignored. Edit it to change the `plugins` array ([`templates/zshrc`](templates/README.md) lists every option):
 
 ```zsh
 plugins=(copyfile copypath copybuffer common-aliases fzf starship uv git gh bat zsh-autosuggestions zsh-syntax-highlighting)
@@ -62,7 +76,7 @@ plugins=(copyfile copypath copybuffer common-aliases fzf starship uv git gh bat 
 
 ## Plugins
 
-Each plugin lives in `plugins/<name>/` and has its own README. `templates/zshrc` lists them all; the ones not enabled by default are commented out.
+Each plugin lives in `plugins/<name>/` and has its own README (the bundled third-party ones keep their upstream docs). How plugins are loaded, and how to add one, is covered in [plugins](plugins/README.md). `templates/zshrc` lists them all; the ones not enabled by default are commented out.
 
 | Plugin | Description |
 | ------ | ----------- |
