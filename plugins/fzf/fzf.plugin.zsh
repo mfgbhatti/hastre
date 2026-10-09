@@ -1,14 +1,12 @@
 function fzf_setup_using_fzf() {
   (( ${+commands[fzf]} )) || return 1
 
-  # we remove "fzf " prefix, this fixes really old fzf versions behaviour
-  # see https://github.com/ohmyzsh/ohmyzsh/issues/12387
-  local fzf_ver=${"$(fzf --version)"#fzf }
+  # No version check: we assume fzf is recent (0.48.0+, which has `--zsh`).
+  # An older fzf fails here and the next setup method is tried instead.
+  local fzf_init
+  fzf_init=$(fzf --zsh 2>/dev/null) || return 1
 
-  autoload -Uz is-at-least
-  is-at-least 0.48.0 ${${(s: :)fzf_ver}[1]} || return 1
-
-  eval "$(fzf --zsh)"
+  eval "$fzf_init"
 }
 
 function fzf_setup_using_base_dir() {
