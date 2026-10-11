@@ -36,7 +36,7 @@ After:&nbsp; [![Screenshot #4.2](images/after4-smaller.png)](images/after4-small
 How to install
 --------------
 
-See [the Oh My Zsh plugin README](README.md).
+See [the plugin README](README.md).
 
 
 FAQ
