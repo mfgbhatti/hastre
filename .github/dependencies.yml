@@ -34,7 +34,7 @@ dependencies:
   plugins/zsh-syntax-highlighting:
     repo: zsh-users/zsh-syntax-highlighting
     branch: master
-    version: 0bfcb582e71d3abe604ce67bc0fe5a21f377507e
+    version: e6683f20e5c38d3e5447f45845d04ddda75d0f23
     precopy: |
       set -e
       version=$(<.version)
