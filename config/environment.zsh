@@ -1,4 +1,18 @@
 #!/usr/bin/env zsh
+
+# Editor: prefer nvim, fall back to vim, then vi. An EDITOR or VISUAL you set
+# yourself (in .zshrc before Hastre loads, or in the environment) is kept.
+if (($+commands[nvim])); then
+  : ${EDITOR:=nvim}
+  : ${VISUAL:=nvim}
+elif (($+commands[vim])); then
+  : ${EDITOR:=vim}
+  : ${VISUAL:=vim}
+else
+  : ${EDITOR:=vi}
+  : ${VISUAL:=vi}
+fi
+export EDITOR VISUAL
 # npm
 export NPM_CONFIG_USERCONFIG="$XDG_CONFIG_HOME/npm/npmrc"
 export PATH="$XDG_DATA_HOME/npm/bin:$PATH"
