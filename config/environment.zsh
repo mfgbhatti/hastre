@@ -1,5 +1,3 @@
-#!/usr/bin/env zsh
-
 # Editor: prefer nvim, fall back to vim, then vi. An EDITOR or VISUAL you set
 # yourself (in .zshrc before Hastre loads, or in the environment) is kept.
 if (($+commands[nvim])); then

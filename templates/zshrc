@@ -1,3 +1,4 @@
+# vim: ft=zsh
 # Hastre ~/.config/zsh/.zshrc (copy of templates/zshrc, installed by
 # tools/hastre-setup). This file is personal and is ignored by git.
 #
