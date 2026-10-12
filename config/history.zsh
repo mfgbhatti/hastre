@@ -57,3 +57,5 @@ setopt hist_ignore_all_dups   # drop the older copy when a duplicate command is 
 setopt hist_save_no_dups      # don't write duplicate entries to HISTFILE
 setopt hist_find_no_dups      # skip duplicates when searching backwards (Up, Ctrl+R)
 setopt hist_reduce_blanks     # strip superfluous blanks before saving
+
+# vim: set ts=2 sts=2 sw=2 et ft=zsh :

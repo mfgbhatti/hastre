@@ -99,3 +99,5 @@ for config_file ("$ZSH"/config/*.zsh(N)); do
   source "$config_file"
 done
 unset config_file
+
+# vim: set ts=2 sts=2 sw=2 et ft=zsh :

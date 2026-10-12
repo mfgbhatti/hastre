@@ -140,3 +140,5 @@ bindkey "^[m" copy-prev-shell-word
 # bindkey '^[[F' end-of-line
 #
 #
+
+# vim: set ts=2 sts=2 sw=2 et ft=zsh :

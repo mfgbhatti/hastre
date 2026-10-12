@@ -112,3 +112,5 @@ function f2blog {
     _f2b_root journalctl -u fail2ban -n $n -f
   fi
 }
+
+#  vim: set ts=2 sts=2 sw=2 et ft=zsh :

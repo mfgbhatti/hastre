@@ -35,3 +35,5 @@ export PYTHONUSERBASE="$XDG_DATA_HOME/python"
 export _JAVA_OPTIONS=-Djava.util.prefs.userRoot="$XDG_CONFIG_HOME"/java
 # wine prefix
 export WINEPREFIX="$XDG_DATA_HOME"/wineprefixes/default
+
+# vim: set ts=2 sts=2 sw=2 et ft=zsh :

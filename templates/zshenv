@@ -1,4 +1,4 @@
-# vim: ft=zsh
+# vim: set ts=2 sts=2 sw=2 et ft=zsh :
 # shuck:disable=C001
 # Hastre ~/.zshenv (copy of templates/zshenv, installed by tools/hastre-setup).
 #

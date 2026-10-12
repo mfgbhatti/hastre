@@ -38,3 +38,5 @@ zstyle '*' single-ignored show
 
 # automatically load bash completion functions
 autoload -U +X bashcompinit && bashcompinit
+
+# vim: set ts=2 sts=2 sw=2 et ft=zsh :
