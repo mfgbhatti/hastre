@@ -1,3 +1,5 @@
+# vim: ft=zsh
+# shuck:disable=C001
 # Hastre ~/.zshenv (copy of templates/zshenv, installed by tools/hastre-setup).
 #
 # zsh reads this file for EVERY invocation (login, interactive, scripts), so it
@@ -10,3 +12,8 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 
 # Point zsh at the Hastre checkout (.zshrc, .zprofile, ... are read from here).
 export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
+
+# Debian and Ubuntu run compinit from /etc/zsh/zshrc and leave a stray
+# .zcompdump in ZDOTDIR. Hastre runs compinit itself (with its own dump in
+# $ZSH_CACHE_DIR), so tell the system file to skip it.
+skip_global_compinit=1
