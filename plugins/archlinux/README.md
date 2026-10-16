@@ -8,6 +8,12 @@ To use it, add `archlinux` to the plugins array in your zshrc file:
 plugins=(... archlinux)
 ```
 
+## Running without sudo
+
+Commands that need root are prefixed with `sudo`. The prefix is dropped when
+you are root, when `sudo` is not installed, or on Termux (no root, no `sudo`),
+so `pin` runs plain `pacman -S` there.
+
 ## Features
 
 ### Pacman
