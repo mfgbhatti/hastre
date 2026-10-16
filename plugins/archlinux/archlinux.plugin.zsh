@@ -1,33 +1,24 @@
 # created goes to https://github.com/ohmyzsh/ohmyzsh
-
-# Privilege prefix, left empty when it is not needed or not available: as root,
-# on Termux (no root, no sudo), or when sudo is not installed.
-if [[ $OSTYPE == linux-android* || $EUID -eq 0 ]] || (( ! $+commands[sudo] )); then
-  typeset -g _sudo=''
-else
-  typeset -g _sudo='sudo'
-fi
-
 # Pacman - https://wiki.archlinux.org/index.php/Pacman_Tips
-alias pupg='${=_sudo} pacman -Syu'
-alias pin='${=_sudo} pacman -S'
-alias plean='${=_sudo} pacman -Sc'
-alias pins='${=_sudo} pacman -U'
-alias plr='${=_sudo} pacman -Scc'
-alias prem='${=_sudo} pacman -Rns'
+alias pupg='sudo pacman -Syu'
+alias pin='sudo pacman -S'
+alias plean='sudo pacman -Sc'
+alias pins='sudo pacman -U'
+alias plr='sudo pacman -Scc'
+alias prem='sudo pacman -Rns'
 alias prep='pacman -Si'
 alias preps='pacman -Ss'
 alias ploc='pacman -Qi'
 alias plocs='pacman -Qs'
-alias pinsd='${=_sudo} pacman -S --asdeps'
-alias pmir='${=_sudo} pacman -Syy'
+alias pinsd='sudo pacman -S --asdeps'
+alias pmir='sudo pacman -Syy'
 alias plsorphans='pacman -Qdt'
-alias prmorphans='${=_sudo} pacman -Rs $(pacman -Qtdq)'
-alias pfileupg='${=_sudo} pacman -Fy'
+alias prmorphans='sudo pacman -Rs $(pacman -Qtdq)'
+alias pfileupg='sudo pacman -Fy'
 alias pfiles='pacman -F'
 alias pls='pacman -Ql'
 alias pown='pacman -Qo'
-alias pupd='${=_sudo} pacman -Sy'
+alias pupd="sudo pacman -Sy"
 
 function paclist() {
   pacman -Qqe | xargs -I{} -P0 --no-run-if-empty pacman -Qs --color=auto "^{}\$"
@@ -51,14 +42,14 @@ function pacdisowned() {
   rm -rf $tmp_dir
 }
 
-alias pacmanallkeys='${=_sudo} pacman-key --refresh-keys'
+alias pacmanallkeys='sudo pacman-key --refresh-keys'
 
 function pacmansignkeys() {
   local key
   for key in $@; do
-    ${=_sudo} pacman-key --recv-keys $key
-    ${=_sudo} pacman-key --lsign-key $key
-    printf 'trust\n3\n' | ${=_sudo} gpg --homedir /etc/pacman.d/gnupg \
+    sudo pacman-key --recv-keys $key
+    sudo pacman-key --lsign-key $key
+    printf 'trust\n3\n' | sudo gpg --homedir /etc/pacman.d/gnupg \
       --no-permission-warning --command-fd 0 --edit-key $key
   done
 }
@@ -90,14 +81,14 @@ fi
 
 # Check Arch Linux PGP Keyring before System Upgrade to prevent failure.
 function upgrade() {
-  ${=_sudo} pacman -Sy
+  sudo pacman -Sy
   echo ":: Checking Arch Linux PGP Keyring..."
-  local installedver="$(LANG= ${=_sudo} pacman -Qi archlinux-keyring | grep -Po '(?<=Version         : ).*')"
-  local currentver="$(LANG= ${=_sudo} pacman -Si archlinux-keyring | grep -Po '(?<=Version         : ).*')"
+  local installedver="$(LANG= sudo pacman -Qi archlinux-keyring | grep -Po '(?<=Version         : ).*')"
+  local currentver="$(LANG= sudo pacman -Si archlinux-keyring | grep -Po '(?<=Version         : ).*')"
   if [ $installedver != $currentver ]; then
     echo " Arch Linux PGP Keyring is out of date."
     echo " Updating before full system upgrade."
-    ${=_sudo} pacman -S --needed --noconfirm archlinux-keyring
+    sudo pacman -S --needed --noconfirm archlinux-keyring
   else
     echo " Arch Linux PGP Keyring is up to date."
     echo " Proceeding with full system upgrade."
@@ -109,8 +100,8 @@ function upgrade() {
   elif (( $+commands[pacaur] )); then
     pacaur -Su
   elif (( $+commands[aura] )); then
-    ${=_sudo} aura -Su
+    sudo aura -Su
   else
-    ${=_sudo} pacman -Su
+    sudo pacman -Su
   fi
 }
