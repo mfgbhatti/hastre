@@ -101,6 +101,7 @@ Each plugin lives in `plugins/<name>/` and has its own README (the bundled third
 | `systemd` | systemctl and journalctl aliases |
 | `uv` | uv aliases and completion |
 | `you-should-use` | Reminds you of aliases you could have used |
+| `zgcrypt` | Encrypt and decrypt a directory with tar, zstd and gpg. Needs `zstd` and `gpg` |
 | `zsh-autosuggestions` | Fish-style suggestions as you type |
 | `zsh-syntax-highlighting` | Syntax highlighting on the command line (load last) |
 

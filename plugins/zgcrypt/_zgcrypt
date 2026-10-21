@@ -1,0 +1,19 @@
+#compdef zgcrypt
+
+local curcontext="$curcontext" state line
+_arguments -C \
+  '1:command:(encrypt decrypt)' \
+  '*::arg:->args'
+
+case $state in
+  args)
+    case $line[1] in
+      encrypt|enc|e)
+        _arguments '1:directory:_files -/' '2:output file:_files'
+        ;;
+      decrypt|dec|d)
+        _arguments '1:encrypted file:_files -g "*.gpg"' '2:output directory:_files -/'
+        ;;
+    esac
+    ;;
+esac

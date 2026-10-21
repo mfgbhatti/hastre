@@ -32,7 +32,8 @@ HIST_STAMPS="yyyy-mm-dd"
 # Available:
 #   0x0st  archlinux  bat  common-aliases  copybuffer  copyfile  copypath  dnf
 #   extract  fail2ban  fzf  fzf-tab  gh  git  npm  pastrs  rust  starship
-#   systemd  uv  you-should-use  zsh-autosuggestions  zsh-syntax-highlighting
+#   systemd  uv  you-should-use  zgcrypt  zsh-autosuggestions
+#   zsh-syntax-highlighting
 #
 # Load zsh-syntax-highlighting last.
 plugins=(
@@ -55,6 +56,7 @@ plugins=(
   # archlinux
   # dnf
   # systemd
+  # zgcrypt
   you-should-use
   fzf-tab
   zsh-autosuggestions
@@ -79,6 +81,11 @@ plugins=(
 # YSU_MODE=ALL                   # BESTMATCH (default) | ALL
 # YSU_HARDCORE=1
 # YSU_IGNORED_ALIASES=(g ll)
+
+# zgcrypt
+# ZGCRYPT_ZSTD_LEVEL=19
+# ZGCRYPT_ZSTD_THREADS=0
+# ZGCRYPT_GPG_RECIPIENT=you@example.com   # public-key mode instead of a passphrase
 
 # fzf
 # DISABLE_FZF_AUTO_COMPLETION=true
