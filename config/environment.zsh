@@ -1,14 +1,14 @@
 # Editor: prefer nvim, fall back to vim, then vi. An EDITOR or VISUAL you set
 # yourself (in .zshrc before Hastre loads, or in the environment) is kept.
 if (($+commands[nvim])); then
-  : ${EDITOR:=nvim}
-  : ${VISUAL:=nvim}
+	: ${EDITOR:=nvim}
+	: ${VISUAL:=nvim}
 elif (($+commands[vim])); then
-  : ${EDITOR:=vim}
-  : ${VISUAL:=vim}
+	: ${EDITOR:=vim}
+	: ${VISUAL:=vim}
 else
-  : ${EDITOR:=vi}
-  : ${VISUAL:=vi}
+	: ${EDITOR:=vi}
+	: ${VISUAL:=vi}
 fi
 export EDITOR VISUAL
 # npm
@@ -37,4 +37,6 @@ export _JAVA_OPTIONS=-Djava.util.prefs.userRoot="$XDG_CONFIG_HOME"/java
 export WINEPREFIX="$XDG_DATA_HOME"/wineprefixes/default
 # PHP history workarround
 export PHP_HISTFILE="$XDG_STATE_HOME"/php/history
+export PATH="${XDG_CONFIG_HOME:-$HOME/.config}/composer/vendor/bin:$PATH"
+
 # vim: set ts=2 sts=2 sw=2 et ft=zsh :
